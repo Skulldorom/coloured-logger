@@ -52,4 +52,4 @@ Pushes to `main` trigger a GitHub Actions workflow that:
 2. Builds the package
 3. Publishes to PyPI
 
-Set `PYPI_API_TOKEN` in repository secrets before enabling release automation.
+Configure a Trusted Publisher in PyPI for this repository/workflow to enable OIDC-based publishing (no API token required).
