@@ -3,7 +3,7 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "coloured-logger"
+name = "python-coloured-logger"
 version = "0.1.0"
 description = "Simple coloured logging for Flask and FastAPI apps"
 readme = "README.md"
