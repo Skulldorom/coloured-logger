@@ -85,10 +85,12 @@ def setup_logging(
     logger = logging.getLogger(logger_name)
     logger.setLevel(level)
 
-    managed_handler_exists = any(getattr(handler, "_coloured_logger_managed", False) for handler in logger.handlers)
+    managed_handler_exists = any(
+        isinstance(handler, logging.StreamHandler) and isinstance(handler.formatter, ColouredFormatter)
+        for handler in logger.handlers
+    )
     if not managed_handler_exists:
         handler = logging.StreamHandler(stream)
-        handler._coloured_logger_managed = True
         handler.setFormatter(ColouredFormatter(fmt=fmt, datefmt=datefmt, use_color=use_color))
         logger.addHandler(handler)
 
