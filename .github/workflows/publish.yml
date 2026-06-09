@@ -106,7 +106,10 @@ jobs:
               if release_versions:
                   latest_pypi_version = max(release_versions)
           except (urllib.error.URLError, json.JSONDecodeError, TimeoutError, OSError) as exc:
-              print(f"Warning: failed to read versions from PyPI ({exc}); continuing without PyPI baseline")
+              print(
+                  f"Warning: failed to read versions from PyPI for '{project_name}' "
+                  f"({exc}); continuing without PyPI baseline"
+              )
 
           major, minor, patch = base_major, base_minor, base_patch
           if latest_tag_version:
@@ -157,7 +160,7 @@ jobs:
           with Path(github_output).open("a", encoding="utf-8") as output_file:
               output_file.write(f"version={new_version}\n")
               output_file.write(
-                  f"latest_pypi_version={'.'.join(map(str, latest_pypi_version)) if latest_pypi_version else ''}\n"
+                  f"latest_pypi_version={'.'.join(map(str, latest_pypi_version)) if latest_pypi_version is not None else ''}\n"
               )
           PY
         env:
@@ -177,7 +180,7 @@ jobs:
               echo "Tag $previous_tag already exists on origin"
             else
               if [ -z "$(git tag -l "$previous_tag")" ]; then
-                git tag "$previous_tag"
+                git tag "$previous_tag" "$GITHUB_SHA"
               fi
               git push origin "$previous_tag"
             fi
@@ -188,7 +191,7 @@ jobs:
             echo "Tag $tag already exists on origin"
           else
             if [ -z "$(git tag -l "$tag")" ]; then
-              git tag "$tag"
+              git tag "$tag" "$GITHUB_SHA"
             fi
             git push origin "$tag"
           fi
