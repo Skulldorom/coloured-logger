@@ -157,11 +157,14 @@ jobs:
           pyproject_path.write_text(updated, encoding="utf-8")
 
           print(f"Using version: {new_version}")
+          latest_pypi_version_str = (
+              ".".join(map(str, latest_pypi_version))
+              if latest_pypi_version is not None
+              else ""
+          )
           with Path(github_output).open("a", encoding="utf-8") as output_file:
               output_file.write(f"version={new_version}\n")
-              output_file.write(
-                  f"latest_pypi_version={'.'.join(map(str, latest_pypi_version)) if latest_pypi_version is not None else ''}\n"
-              )
+              output_file.write(f"latest_pypi_version={latest_pypi_version_str}\n")
           PY
         env:
           VERSION_BUMP: ${{ github.event.inputs.version_bump }}
@@ -179,10 +182,7 @@ jobs:
             if git ls-remote --tags origin "refs/tags/$previous_tag" | grep -q .; then
               echo "Tag $previous_tag already exists on origin"
             else
-              if [ -z "$(git tag -l "$previous_tag")" ]; then
-                git tag "$previous_tag" "$GITHUB_SHA"
-              fi
-              git push origin "$previous_tag"
+              echo "Warning: tag $previous_tag is missing on origin but cannot be backfilled automatically"
             fi
           fi
 
