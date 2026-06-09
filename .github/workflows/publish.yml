@@ -143,7 +143,7 @@ jobs:
         run: |
           tag="v${{ steps.set_version.outputs.version }}"
           if git rev-parse "$tag" >/dev/null 2>&1; then
-            echo "Tag $tag already exists"
+            echo "Warning: tag $tag already exists; skipping tag creation"
           else
             git tag "$tag"
             git push origin "$tag"
