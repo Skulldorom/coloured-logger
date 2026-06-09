@@ -64,7 +64,7 @@ jobs:
 
           try:
               tags_output = subprocess.check_output(
-                  ["git", "tag", "--list", "v*"],
+                  ["git", "tag", "--list", "v*", "--sort=-version:refname"],
                   stderr=subprocess.STDOUT,
                   text=True,
               )
@@ -74,15 +74,16 @@ jobs:
               tags = []
 
           version_pattern = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
-          parsed_tags = []
+          latest_tag_version = None
           for tag in tags:
               tag_match = version_pattern.match(tag.strip())
               if tag_match:
-                  parsed_tags.append(tuple(map(int, tag_match.groups())))
+                  latest_tag_version = tuple(map(int, tag_match.groups()))
+                  break
 
           major, minor, patch = base_major, base_minor, base_patch
-          if parsed_tags:
-              tag_major, tag_minor, tag_patch = max(parsed_tags)
+          if latest_tag_version:
+              tag_major, tag_minor, tag_patch = latest_tag_version
               if (tag_major, tag_minor, tag_patch) > (base_major, base_minor, base_patch):
                   major, minor, patch = tag_major, tag_minor, tag_patch
 
