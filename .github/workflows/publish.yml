@@ -142,12 +142,14 @@ jobs:
       - name: Create and push tag
         run: |
           tag="v${{ steps.set_version.outputs.version }}"
-          if [ -n "$(git tag -l "$tag")" ]; then
-            echo "Tag $tag already exists locally"
+          if git ls-remote --tags origin "refs/tags/$tag" | grep -q .; then
+            echo "Tag $tag already exists on origin"
           else
-            git tag "$tag"
+            if [ -z "$(git tag -l "$tag")" ]; then
+              git tag "$tag"
+            fi
+            git push origin "$tag"
           fi
-          git push origin "$tag"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
