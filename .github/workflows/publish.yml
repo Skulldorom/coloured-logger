@@ -53,7 +53,9 @@ jobs:
           content = pyproject_path.read_text(encoding="utf-8")
           github_output = os.environ.get("GITHUB_OUTPUT")
           if not github_output:
-              raise RuntimeError("GITHUB_OUTPUT is not set; cannot set step output")
+              raise RuntimeError(
+                  "GITHUB_OUTPUT environment variable is not set; this script must run in GitHub Actions"
+              )
 
           match = re.search(r'^version\s*=\s*"(\d+)\.(\d+)\.(\d+)"', content, re.MULTILINE)
 
@@ -84,6 +86,7 @@ jobs:
           major, minor, patch = base_major, base_minor, base_patch
           if latest_tag_version:
               tag_major, tag_minor, tag_patch = latest_tag_version
+              # Use the latest release tag as the source of truth for the next publish version.
               if (tag_major, tag_minor, tag_patch) > (base_major, base_minor, base_patch):
                   major, minor, patch = tag_major, tag_minor, tag_patch
 
