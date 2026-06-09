@@ -51,6 +51,9 @@ jobs:
 
           pyproject_path = Path("pyproject.toml")
           content = pyproject_path.read_text(encoding="utf-8")
+          github_output = os.environ.get("GITHUB_OUTPUT")
+          if not github_output:
+              raise RuntimeError("GITHUB_OUTPUT is not set; cannot set step output")
 
           match = re.search(r'^version\s*=\s*"(\d+)\.(\d+)\.(\d+)"', content, re.MULTILINE)
 
@@ -77,14 +80,11 @@ jobs:
               if tag_match:
                   parsed_tags.append(tuple(map(int, tag_match.groups())))
 
+          major, minor, patch = base_major, base_minor, base_patch
           if parsed_tags:
               tag_major, tag_minor, tag_patch = max(parsed_tags)
               if (tag_major, tag_minor, tag_patch) > (base_major, base_minor, base_patch):
                   major, minor, patch = tag_major, tag_minor, tag_patch
-              else:
-                  major, minor, patch = base_major, base_minor, base_patch
-          else:
-              major, minor, patch = base_major, base_minor, base_patch
 
           event_name = os.environ["GITHUB_EVENT_NAME"]
 
@@ -123,9 +123,6 @@ jobs:
           pyproject_path.write_text(updated, encoding="utf-8")
 
           print(f"Using version: {new_version}")
-          github_output = os.environ.get("GITHUB_OUTPUT")
-          if not github_output:
-              raise RuntimeError("GITHUB_OUTPUT is not set; cannot set step output")
           with Path(github_output).open("a", encoding="utf-8") as output_file:
               output_file.write(f"version={new_version}\n")
           PY
