@@ -139,6 +139,16 @@ jobs:
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
 
+      - name: Create and push tag
+        run: |
+          tag="v${{ steps.set_version.outputs.version }}"
+          if git rev-parse "$tag" >/dev/null 2>&1; then
+            echo "Tag $tag already exists"
+          else
+            git tag "$tag"
+            git push origin "$tag"
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
