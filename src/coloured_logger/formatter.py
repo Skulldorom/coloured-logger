@@ -75,7 +75,7 @@ def _ensure_success_level() -> None:
 
 def setup_logging(
     logger_name: Optional[str] = None,
-    level: int = logging.INFO,
+    level: int = logging.DEBUG,
     stream: Optional[TextIO] = None,
     use_color: Optional[bool] = None,
     datefmt: Optional[str] = None,
@@ -106,6 +106,9 @@ class log:
         self.string = "".join(str(message) for message in messages)
         self.logger = get_logger(__name__)
 
+    def debug(self) -> None:
+        self.logger.debug(self.string)
+
     def success(self) -> None:
         self.logger.success(self.string)
 
@@ -117,3 +120,6 @@ class log:
 
     def error(self) -> None:
         self.logger.error(self.string)
+
+    def critical(self) -> None:
+        self.logger.critical(self.string)
