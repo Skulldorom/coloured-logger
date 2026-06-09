@@ -105,7 +105,7 @@ jobs:
                       release_versions.append(tuple(map(int, release_match.groups())))
               if release_versions:
                   latest_pypi_version = max(release_versions)
-          except (urllib.error.URLError, json.JSONDecodeError, TimeoutError, OSError) as exc:
+          except (urllib.error.URLError, json.JSONDecodeError, TimeoutError) as exc:
               print(
                   f"Warning: failed to read versions from PyPI for '{project_name}' "
                   f"({exc}); continuing without PyPI baseline"
@@ -182,7 +182,7 @@ jobs:
             if git ls-remote --tags origin "refs/tags/$previous_tag" | grep -q .; then
               echo "Tag $previous_tag already exists on origin"
             else
-              echo "Warning: tag $previous_tag is missing on origin but cannot be backfilled automatically"
+              echo "Warning: latest PyPI tag $previous_tag is missing on origin; it cannot be backfilled automatically"
             fi
           fi
 
