@@ -47,6 +47,9 @@ jobs:
           import os
           import re
           import subprocess
+          import urllib.error
+          import urllib.request
+          import json
           from pathlib import Path
 
           pyproject_path = Path("pyproject.toml")
@@ -63,6 +66,10 @@ jobs:
               raise RuntimeError("Could not find version in pyproject.toml")
 
           base_major, base_minor, base_patch = map(int, match.groups())
+          project_name_match = re.search(r'^name\s*=\s*"([^"]+)"', content, re.MULTILINE)
+          if not project_name_match:
+              raise RuntimeError("Could not find project name in pyproject.toml")
+          project_name = project_name_match.group(1)
 
           try:
               tags_output = subprocess.check_output(
@@ -83,12 +90,32 @@ jobs:
                   latest_tag_version = tuple(map(int, tag_match.groups()))
                   break
 
+          latest_pypi_version = None
+          try:
+              with urllib.request.urlopen(
+                  f"https://pypi.org/pypi/{project_name}/json",
+                  timeout=10,
+              ) as response:
+                  payload = json.loads(response.read().decode("utf-8"))
+              releases = payload.get("releases", {})
+              release_versions = []
+              for release in releases:
+                  release_match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", release)
+                  if release_match:
+                      release_versions.append(tuple(map(int, release_match.groups())))
+              if release_versions:
+                  latest_pypi_version = max(release_versions)
+          except (urllib.error.URLError, json.JSONDecodeError, TimeoutError, OSError) as exc:
+              print(f"Warning: failed to read versions from PyPI ({exc}); continuing without PyPI baseline")
+
           major, minor, patch = base_major, base_minor, base_patch
           if latest_tag_version:
               tag_major, tag_minor, tag_patch = latest_tag_version
               # Use the latest release tag as the source of truth for the next publish version.
               if (tag_major, tag_minor, tag_patch) > (base_major, base_minor, base_patch):
                   major, minor, patch = tag_major, tag_minor, tag_patch
+          if latest_pypi_version and latest_pypi_version > (major, minor, patch):
+              major, minor, patch = latest_pypi_version
 
           event_name = os.environ["GITHUB_EVENT_NAME"]
 
@@ -129,6 +156,9 @@ jobs:
           print(f"Using version: {new_version}")
           with Path(github_output).open("a", encoding="utf-8") as output_file:
               output_file.write(f"version={new_version}\n")
+              output_file.write(
+                  f"latest_pypi_version={'.'.join(map(str, latest_pypi_version)) if latest_pypi_version else ''}\n"
+              )
           PY
         env:
           VERSION_BUMP: ${{ github.event.inputs.version_bump }}
@@ -141,6 +171,18 @@ jobs:
 
       - name: Create and push tag
         run: |
+          previous_tag="v${{ steps.set_version.outputs.latest_pypi_version }}"
+          if [ -n "${{ steps.set_version.outputs.latest_pypi_version }}" ]; then
+            if git ls-remote --tags origin "refs/tags/$previous_tag" | grep -q .; then
+              echo "Tag $previous_tag already exists on origin"
+            else
+              if [ -z "$(git tag -l "$previous_tag")" ]; then
+                git tag "$previous_tag"
+              fi
+              git push origin "$previous_tag"
+            fi
+          fi
+
           tag="v${{ steps.set_version.outputs.version }}"
           if git ls-remote --tags origin "refs/tags/$tag" | grep -q .; then
             echo "Tag $tag already exists on origin"
