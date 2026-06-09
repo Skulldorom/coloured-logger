@@ -18,7 +18,7 @@ on:
           - major
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 jobs:
@@ -41,21 +41,54 @@ jobs:
           python -m pip install build
 
       - name: Set version
+        id: set_version
         run: |
           python - <<'PY'
           import os
           import re
+          import subprocess
           from pathlib import Path
 
           pyproject_path = Path("pyproject.toml")
           content = pyproject_path.read_text(encoding="utf-8")
+          github_output = os.environ.get("GITHUB_OUTPUT")
+          if not github_output:
+              raise RuntimeError(
+                  "GITHUB_OUTPUT environment variable is not set; this script must run in GitHub Actions"
+              )
 
           match = re.search(r'^version\s*=\s*"(\d+)\.(\d+)\.(\d+)"', content, re.MULTILINE)
 
           if not match:
               raise RuntimeError("Could not find version in pyproject.toml")
 
-          major, minor, patch = map(int, match.groups())
+          base_major, base_minor, base_patch = map(int, match.groups())
+
+          try:
+              tags_output = subprocess.check_output(
+                  ["git", "tag", "--list", "v*", "--sort=-version:refname"],
+                  stderr=subprocess.STDOUT,
+                  text=True,
+              )
+              tags = tags_output.splitlines()
+          except (subprocess.CalledProcessError, FileNotFoundError) as exc:
+              print(f"Warning: failed to read git tags ({exc}); using pyproject version as base")
+              tags = []
+
+          version_pattern = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
+          latest_tag_version = None
+          for tag in tags:
+              tag_match = version_pattern.match(tag.strip())
+              if tag_match:
+                  latest_tag_version = tuple(map(int, tag_match.groups()))
+                  break
+
+          major, minor, patch = base_major, base_minor, base_patch
+          if latest_tag_version:
+              tag_major, tag_minor, tag_patch = latest_tag_version
+              # Use the latest release tag as the source of truth for the next publish version.
+              if (tag_major, tag_minor, tag_patch) > (base_major, base_minor, base_patch):
+                  major, minor, patch = tag_major, tag_minor, tag_patch
 
           event_name = os.environ["GITHUB_EVENT_NAME"]
 
@@ -94,6 +127,8 @@ jobs:
           pyproject_path.write_text(updated, encoding="utf-8")
 
           print(f"Using version: {new_version}")
+          with Path(github_output).open("a", encoding="utf-8") as output_file:
+              output_file.write(f"version={new_version}\n")
           PY
         env:
           VERSION_BUMP: ${{ github.event.inputs.version_bump }}
@@ -103,3 +138,22 @@ jobs:
 
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Create and push tag
+        run: |
+          tag="v${{ steps.set_version.outputs.version }}"
+          if git ls-remote --tags origin "refs/tags/$tag" | grep -q .; then
+            echo "Tag $tag already exists on origin"
+          else
+            if [ -z "$(git tag -l "$tag")" ]; then
+              git tag "$tag"
+            fi
+            git push origin "$tag"
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.set_version.outputs.version }}
+          name: v${{ steps.set_version.outputs.version }}
+          generate_release_notes: true
