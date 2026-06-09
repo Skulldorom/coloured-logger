@@ -142,12 +142,12 @@ jobs:
       - name: Create and push tag
         run: |
           tag="v${{ steps.set_version.outputs.version }}"
-          if git rev-parse "$tag" >/dev/null 2>&1; then
-            echo "Warning: tag $tag already exists; skipping tag creation"
+          if [ -n "$(git tag -l "$tag")" ]; then
+            echo "Tag $tag already exists locally"
           else
             git tag "$tag"
-            git push origin "$tag"
           fi
+          git push origin "$tag"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
