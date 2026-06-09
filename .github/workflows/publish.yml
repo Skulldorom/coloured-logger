@@ -18,7 +18,7 @@ on:
           - major
 
 permissions:
-  contents: read
+  contents: write
   id-token: write
 
 jobs:
@@ -41,10 +41,12 @@ jobs:
           python -m pip install build
 
       - name: Set version
+        id: set_version
         run: |
           python - <<'PY'
           import os
           import re
+          import subprocess
           from pathlib import Path
 
           pyproject_path = Path("pyproject.toml")
@@ -55,7 +57,28 @@ jobs:
           if not match:
               raise RuntimeError("Could not find version in pyproject.toml")
 
-          major, minor, patch = map(int, match.groups())
+          base_major, base_minor, base_patch = map(int, match.groups())
+
+          tags = subprocess.check_output(
+              ["git", "tag", "--list", "v*"],
+              text=True
+          ).splitlines()
+
+          version_pattern = re.compile(r"^v(\d+)\.(\d+)\.(\d+)$")
+          parsed_tags = []
+          for tag in tags:
+              tag_match = version_pattern.match(tag.strip())
+              if tag_match:
+                  parsed_tags.append(tuple(map(int, tag_match.groups())))
+
+          if parsed_tags:
+              tag_major, tag_minor, tag_patch = max(parsed_tags)
+              if (tag_major, tag_minor, tag_patch) > (base_major, base_minor, base_patch):
+                  major, minor, patch = tag_major, tag_minor, tag_patch
+              else:
+                  major, minor, patch = base_major, base_minor, base_patch
+          else:
+              major, minor, patch = base_major, base_minor, base_patch
 
           event_name = os.environ["GITHUB_EVENT_NAME"]
 
@@ -94,6 +117,7 @@ jobs:
           pyproject_path.write_text(updated, encoding="utf-8")
 
           print(f"Using version: {new_version}")
+          Path(os.environ["GITHUB_OUTPUT"]).write_text(f"version={new_version}\n", encoding="utf-8")
           PY
         env:
           VERSION_BUMP: ${{ github.event.inputs.version_bump }}
@@ -103,3 +127,10 @@ jobs:
 
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.set_version.outputs.version }}
+          name: v${{ steps.set_version.outputs.version }}
+          generate_release_notes: true
