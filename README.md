@@ -45,10 +45,10 @@ logger.critical("System crash")
 Example output:
 
 ```text
-[2026-05-27 12:00:00] INFO     Server started
-[2026-05-27 12:00:01] SUCCESS  Database connected
-[2026-05-27 12:00:02] WARNING  High memory usage
-[2026-05-27 12:00:03] ERROR    Request failed
+[27/06/2026] INFO     Server started
+[27/06/2026] SUCCESS  Database connected
+[27/06/2026] WARNING  High memory usage
+[27/06/2026] ERROR    Request failed
 ```
 
 ---
@@ -157,7 +157,7 @@ FLASK_LOG_DATE_FORMAT=%H:%M:%S
 
 ## Requirements
 
-- Python 3.9+
+- Python 3.8+
 - Flask (optional)
 - FastAPI / Uvicorn (optional)
 
