@@ -23,7 +23,7 @@ def _resolve_use_color(use_color: Optional[bool]) -> bool:
 def _resolve_datefmt(datefmt: Optional[str]) -> str:
     if datefmt:
         return datefmt
-    return os.getenv("FLASK_LOG_DATE_FORMAT") or os.getenv("COLOURED_LOGGER_DATE_FORMAT") or "%d/%b/%Y %H:%M:%S"
+    return os.getenv("FLASK_LOG_DATE_FORMAT") or os.getenv("COLOURED_LOGGER_DATE_FORMAT") or "%d/%m/%Y"
 
 
 class ColouredFormatter(logging.Formatter):
@@ -75,7 +75,7 @@ def _ensure_success_level() -> None:
 
 def setup_logging(
     logger_name: Optional[str] = None,
-    level: int = logging.DEBUG,
+    level: int = logging.NOTSET,
     stream: Optional[TextIO] = None,
     use_color: Optional[bool] = None,
     datefmt: Optional[str] = None,
@@ -83,7 +83,8 @@ def setup_logging(
 ) -> logging.Logger:
     _ensure_success_level()
     logger = logging.getLogger(logger_name)
-    logger.setLevel(level)
+    if level != logging.NOTSET or logger.level == logging.NOTSET:
+        logger.setLevel(level)
 
     managed_handler_exists = any(
         isinstance(handler, logging.StreamHandler) and isinstance(handler.formatter, ColouredFormatter)
