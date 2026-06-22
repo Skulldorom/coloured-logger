@@ -23,7 +23,7 @@ def _resolve_use_color(use_color: Optional[bool]) -> bool:
 def _resolve_datefmt(datefmt: Optional[str]) -> str:
     if datefmt:
         return datefmt
-    return os.getenv("FLASK_LOG_DATE_FORMAT") or os.getenv("COLOURED_LOGGER_DATE_FORMAT") or "%d/%m/%Y"
+    return os.getenv("FLASK_LOG_DATE_FORMAT") or os.getenv("COLOURED_LOGGER_DATE_FORMAT") or "%d/%m/%Y %H:%M:%S"
 
 
 class ColouredFormatter(logging.Formatter):
