@@ -81,6 +81,14 @@ class SetupLoggingTests(unittest.TestCase):
         logger, _ = self._make_stream_logger(logger_name="test_level_warn", level=logging.WARNING)
         self.assertEqual(logger.level, logging.WARNING)
 
+    def test_default_level_does_not_override_existing_logger_level(self):
+        logger_name = "test_preserve_level"
+        original = logging.getLogger(logger_name)
+        original.setLevel(logging.ERROR)
+
+        logger, _ = self._make_stream_logger(logger_name=logger_name)
+        self.assertEqual(logger.level, logging.ERROR)
+
     def test_handler_deduplication(self):
         logger1 = setup_logging(logger_name="test_dedup", use_color=False)
         count1 = len(logger1.handlers)

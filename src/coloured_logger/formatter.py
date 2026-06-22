@@ -83,7 +83,8 @@ def setup_logging(
 ) -> logging.Logger:
     _ensure_success_level()
     logger = logging.getLogger(logger_name)
-    logger.setLevel(level)
+    if level != logging.NOTSET or logger.level == logging.NOTSET:
+        logger.setLevel(level)
 
     managed_handler_exists = any(
         isinstance(handler, logging.StreamHandler) and isinstance(handler.formatter, ColouredFormatter)
