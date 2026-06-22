@@ -45,10 +45,10 @@ logger.critical("System crash")
 Example output:
 
 ```text
-[20/06/2026 12:00:00] [INFO] Server started
-[20/06/2026 12:00:01] [SUCCESS] Database connected
-[20/06/2026 12:00:02] [WARNING] High memory usage
-[20/06/2026 12:00:03] [ERROR] Request failed
+[20/06/2026] [INFO] Server started
+[20/06/2026] [SUCCESS] Database connected
+[20/06/2026] [WARNING] High memory usage
+[20/06/2026] [ERROR] Request failed
 ```
 
 ---

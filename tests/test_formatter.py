@@ -52,7 +52,7 @@ class ColouredFormatterTests(unittest.TestCase):
 
     def test_default_date_format(self):
         formatter = ColouredFormatter(use_color=False)
-        self.assertEqual(formatter.datefmt, "%d/%m/%Y %H:%M:%S")
+        self.assertEqual(formatter.datefmt, "%d/%m/%Y")
 
     def test_custom_date_format(self):
         formatter = ColouredFormatter(datefmt="%H:%M", use_color=False)
