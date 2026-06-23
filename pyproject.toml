@@ -18,6 +18,11 @@ classifiers = [
   "Operating System :: OS Independent",
 ]
 
+[project.urls]
+Homepage = "https://github.com/Skulldorom/python-coloured-logger"
+Repository = "https://github.com/Skulldorom/python-coloured-logger"
+Issues = "https://github.com/Skulldorom/python-coloured-logger/issues"
+
 [tool.setuptools]
 package-dir = { "" = "src" }
 
@@ -26,3 +31,10 @@ package-dir = { "" = "src" }
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.mypy]
+strict = true
+python_version = "3.8"
+files = ["src"]
+warn_unused_ignores = true
+warn_redundant_casts = true
