@@ -63,7 +63,7 @@ class ColouredFormatterTests(unittest.TestCase):
         record = logging.LogRecord("test", logging.INFO, __file__, 1, "hello world", (), None)
         output = formatter.format(record)
         self.assertIn("[INFO] hello world", output)
-        self.assertNotIn("\\033[", output)
+        self.assertNotIn("\033[", output)
 
     def test_custom_message_format(self):
         formatter = ColouredFormatter(fmt="%(levelname)s: %(message)s", use_color=False)
