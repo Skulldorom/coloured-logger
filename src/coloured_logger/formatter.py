@@ -4,6 +4,8 @@ from typing import Optional, TextIO
 
 SUCCESS_LEVEL = 25
 
+_success_level_registered: bool = False
+
 
 def _env_bool(name: str, default: bool) -> bool:
     value = os.getenv(name)
@@ -60,6 +62,10 @@ class ColouredFormatter(logging.Formatter):
 
 
 def _ensure_success_level() -> None:
+    global _success_level_registered
+    if _success_level_registered:
+        return
+
     if logging.getLevelName(SUCCESS_LEVEL) != "SUCCESS":
         logging.addLevelName(SUCCESS_LEVEL, "SUCCESS")
 
@@ -71,6 +77,7 @@ def _ensure_success_level() -> None:
             self._log(SUCCESS_LEVEL, msg, args, **kwargs)
 
     setattr(logging.Logger, "success", success)
+    _success_level_registered = True
 
 
 def setup_logging(

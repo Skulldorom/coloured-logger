@@ -60,11 +60,16 @@ class ColouredFormatterTests(unittest.TestCase):
 
     def test_default_message_format(self):
         formatter = ColouredFormatter(use_color=False)
-        self.assertEqual(formatter._fmt, "[%(asctime)s] [%(levelname)s] %(message)s")
+        record = logging.LogRecord("test", logging.INFO, __file__, 1, "hello world", (), None)
+        output = formatter.format(record)
+        self.assertIn("[INFO] hello world", output)
+        self.assertNotIn("\033[", output)
 
     def test_custom_message_format(self):
         formatter = ColouredFormatter(fmt="%(levelname)s: %(message)s", use_color=False)
-        self.assertEqual(formatter._fmt, "%(levelname)s: %(message)s")
+        record = logging.LogRecord("test", logging.ERROR, __file__, 1, "oops", (), None)
+        output = formatter.format(record)
+        self.assertEqual(output, "ERROR: oops")
 
 
 class SetupLoggingTests(unittest.TestCase):
