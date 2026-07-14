@@ -5,6 +5,7 @@ from typing import Any, Optional, TextIO
 SUCCESS_LEVEL = 25
 
 _success_level_registered: bool = False
+_DEFAULT_LEVEL = object()
 
 
 def _env_bool(name: str, default: bool) -> bool:
@@ -83,7 +84,7 @@ def _ensure_success_level() -> None:
 
 def setup_logging(
     logger_name: Optional[str] = None,
-    level: int = logging.DEBUG,
+    level: Any = _DEFAULT_LEVEL,
     stream: Optional[TextIO] = None,
     use_color: Optional[bool] = None,
     datefmt: Optional[str] = None,
@@ -91,7 +92,10 @@ def setup_logging(
 ) -> logging.Logger:
     _ensure_success_level()
     logger = logging.getLogger(logger_name)
-    if level != logging.NOTSET or logger.level == logging.NOTSET:
+    if level is _DEFAULT_LEVEL:
+        if logger.level == logging.NOTSET:
+            logger.setLevel(logging.DEBUG)
+    else:
         logger.setLevel(level)
 
     managed_handler_exists = any(
