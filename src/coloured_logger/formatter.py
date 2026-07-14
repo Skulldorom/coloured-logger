@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Optional, TextIO
+from typing import Any, Optional, TextIO
 
 SUCCESS_LEVEL = 25
 
@@ -70,9 +70,10 @@ def _ensure_success_level() -> None:
         logging.addLevelName(SUCCESS_LEVEL, "SUCCESS")
 
     if hasattr(logging.Logger, "success"):
+        _success_level_registered = True
         return
 
-    def success(self: logging.Logger, msg: str, *args, **kwargs) -> None:
+    def success(self: logging.Logger, msg: object, *args: object, **kwargs: Any) -> None:
         if self.isEnabledFor(SUCCESS_LEVEL):
             self._log(SUCCESS_LEVEL, msg, args, **kwargs)
 
@@ -82,7 +83,7 @@ def _ensure_success_level() -> None:
 
 def setup_logging(
     logger_name: Optional[str] = None,
-    level: int = logging.NOTSET,
+    level: int = logging.DEBUG,
     stream: Optional[TextIO] = None,
     use_color: Optional[bool] = None,
     datefmt: Optional[str] = None,
@@ -105,12 +106,14 @@ def setup_logging(
     return logger
 
 
-def get_logger(name: Optional[str] = None, **kwargs) -> logging.Logger:
+_ensure_success_level()
+
+def get_logger(name: Optional[str] = None, **kwargs: Any) -> logging.Logger:
     return setup_logging(logger_name=name, **kwargs)
 
 
 class log:
-    def __init__(self, *messages) -> None:
+    def __init__(self, *messages: object) -> None:
         self.string = "".join(str(message) for message in messages)
         self.logger = get_logger(__name__)
 
@@ -118,7 +121,7 @@ class log:
         self.logger.debug(self.string)
 
     def success(self) -> None:
-        self.logger.success(self.string)
+        getattr(self.logger, "success")(self.string)
 
     def info(self) -> None:
         self.logger.info(self.string)

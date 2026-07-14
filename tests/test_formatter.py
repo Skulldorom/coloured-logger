@@ -6,6 +6,12 @@ import unittest
 from coloured_logger import ColouredFormatter, SUCCESS_LEVEL, get_logger, setup_logging
 
 
+class SuccessLevelRegistrationTests(unittest.TestCase):
+    def test_success_method_registered_on_import(self):
+        logger = logging.getLogger("test_import_success")
+        self.assertTrue(hasattr(logger, "success"))
+
+
 class ColouredFormatterTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -78,21 +84,18 @@ class SetupLoggingTests(unittest.TestCase):
         logger = setup_logging(stream=stream, use_color=False, datefmt="%Y", **kwargs)
         return logger, stream
 
-    def test_default_level_is_notset(self):
-        logger, _ = self._make_stream_logger(logger_name="test_notset")
-        self.assertEqual(logger.level, logging.NOTSET)
+    def test_default_level_is_debug(self):
+        logger, _ = self._make_stream_logger(logger_name="test_default_debug")
+        self.assertEqual(logger.level, logging.DEBUG)
+
+    def test_default_level_emits_success(self):
+        logger, stream = self._make_stream_logger(logger_name="test_default_success")
+        logger.success("done")
+        self.assertIn("[SUCCESS] done", stream.getvalue())
 
     def test_custom_level(self):
         logger, _ = self._make_stream_logger(logger_name="test_level_warn", level=logging.WARNING)
         self.assertEqual(logger.level, logging.WARNING)
-
-    def test_default_level_does_not_override_existing_logger_level(self):
-        logger_name = "test_preserve_level"
-        original = logging.getLogger(logger_name)
-        original.setLevel(logging.ERROR)
-
-        logger, _ = self._make_stream_logger(logger_name=logger_name)
-        self.assertEqual(logger.level, logging.ERROR)
 
     def test_handler_deduplication(self):
         logger1 = setup_logging(logger_name="test_dedup", use_color=False)
@@ -164,7 +167,7 @@ class GetLoggerTests(unittest.TestCase):
 
     def test_get_logger_default_level(self):
         logger = get_logger("test_gl_default", use_color=False)
-        self.assertEqual(logger.level, logging.NOTSET)
+        self.assertEqual(logger.level, logging.DEBUG)
 
 
 class EnvironmentVariableTests(unittest.TestCase):
