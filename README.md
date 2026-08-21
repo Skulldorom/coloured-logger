@@ -4,6 +4,10 @@ A lightweight Python package that provides clean, coloured logging output for Fl
 
 It extends Python’s built-in `logging` module with readable coloured console output and simple setup helpers.
 
+<p align="center">
+  <a href="https://ko-fi.com/skulldorom"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi" /></a>
+</p>
+
 ---
 
 ## Features
